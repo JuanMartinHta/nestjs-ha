@@ -3,7 +3,7 @@ import { UserRepository } from '../domain/user.repository';
 import { User } from '../domain/user.entity';
 import { v4 as uuidv4 } from 'uuid';
 import { Role } from 'src/common/decorators/roles.decorator';
-import * as bcrypt from 'bcryptjs';
+import bcrypt from 'bcryptjs';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { UpdateUserDto } from '../dto/update-user.dto';
 import { UserResponseDto } from '../dto/user-response.dto';

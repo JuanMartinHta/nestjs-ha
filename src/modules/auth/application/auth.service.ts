@@ -24,11 +24,16 @@ export class AuthService {
         'Password does not match',
         HttpStatus.UNAUTHORIZED,
       );
+
     return user;
   }
 
-  login(user: User): { access_token: string } {
+  login(user: User): { access_token: string; refresh_token: string } {
     return this.authRepository.login(user);
+  }
+
+  refreshToken(token: string): { access_token: string; refresh_token: string } {
+    return this.authRepository.refreshToken(token);
   }
 
   /*

@@ -1,7 +1,8 @@
 import { User } from 'src/modules/user/domain/user.entity';
 
 export interface AuthRepository {
-  login(user: User): { access_token: string };
+  login(user: User): { access_token: string; refresh_token: string };
+  refreshToken(token: string): { access_token: string; refresh_token: string };
   /* create(session: AuthSession): Promise<AuthSession>;
   delete(id: string): Promise<void>;
   findById(id: string): Promise<AuthSession | null>;
