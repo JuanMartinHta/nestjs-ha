@@ -5,6 +5,8 @@ import { AuthRepository } from '../domain/auth.repository';
 import { AuthOrmEntity } from './auth.orm-entity';
 import { User } from 'src/modules/user/domain/user.entity';
 import { JwtService } from '@nestjs/jwt';
+import { AuthMapper } from './auth.mapper';
+import { AuthSession } from '../domain/auth.entity';
 
 @Injectable()
 export class AuthRepositoryImpl implements AuthRepository {
@@ -19,16 +21,10 @@ export class AuthRepositoryImpl implements AuthRepository {
     return { access_token: this.jwtService.sign(payload) };
   }
 
-  /* async create(session: AuthSession): Promise<AuthSession> {
-    const entity = this.repo.create(session);
+  async create(session: AuthSession): Promise<AuthSession> {
+    const entity = this.repo.create(AuthMapper.toOrm(session));
     const saved = await this.repo.save(entity);
-    return new AuthSession(
-      saved.id,
-      saved.userId,
-      saved.token,
-      saved.createdAt,
-      saved.expiresAt,
-    );
+    return AuthMapper.toDomain(saved);
   }
 
   async delete(id: string): Promise<void> {
@@ -38,31 +34,12 @@ export class AuthRepositoryImpl implements AuthRepository {
   async findById(id: string): Promise<AuthSession | null> {
     const found = await this.repo.findOneBy({ id });
     if (!found) return null;
-    return new AuthSession(
-      found.id,
-      found.userId,
-      found.token,
-      found.createdAt,
-      found.expiresAt,
-    );
+    return AuthMapper.toDomain(found);
   }
 
   async findByToken(token: string): Promise<AuthSession | null> {
     const found = await this.repo.findOneBy({ token });
     if (!found) return null;
-    return new AuthSession(
-      found.id,
-      found.userId,
-      found.token,
-      found.createdAt,
-      found.expiresAt,
-    );
+    return AuthMapper.toDomain(found);
   }
-
-  async findByUserId(userId: string): Promise<AuthSession[]> {
-    const sessions = await this.repo.findBy({ userId });
-    return sessions.map(
-      (s) => new AuthSession(s.id, s.userId, s.token, s.createdAt, s.expiresAt),
-    );
-  } */
 }

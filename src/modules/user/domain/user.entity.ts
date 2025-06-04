@@ -1,5 +1,5 @@
 import { Role } from 'src/common/decorators/roles.decorator';
-import { ProfileOrmEntity } from '../../profile/infrastructure/profile.orm-entity';
+import { Profile } from 'src/modules/profile/domain/profile.entity';
 
 export class User {
   constructor(
@@ -8,6 +8,6 @@ export class User {
     public password: string,
     public role: Role,
     public profileId?: string,
-    public profile?: ProfileOrmEntity, // Se especifica el tipo del perfil
+    public profile?: Profile,
   ) {}
 }

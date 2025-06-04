@@ -30,4 +30,23 @@ export class AuthService {
   login(user: User): { access_token: string } {
     return this.authRepository.login(user);
   }
+
+  /*
+  async createSession(session: AuthSession): Promise<AuthResponseDto> {
+    const created = await this.authRepository.create(session);
+    return AuthResponseDto.fromDomain(created);
+  }
+
+  async findSessionById(id: string): Promise<AuthResponseDto | null> {
+    const session = await this.authRepository.findById(id);
+    if (!session) return null;
+    return AuthResponseDto.fromDomain(session);
+  }
+
+  async findSessionByToken(token: string): Promise<AuthResponseDto | null> {
+    const session = await this.authRepository.findByToken(token);
+    if (!session) return null;
+    return AuthResponseDto.fromDomain(session);
+  }
+  */
 }

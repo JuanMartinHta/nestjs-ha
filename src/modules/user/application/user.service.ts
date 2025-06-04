@@ -6,6 +6,7 @@ import { Role } from 'src/common/decorators/roles.decorator';
 import * as bcrypt from 'bcryptjs';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { UpdateUserDto } from '../dto/update-user.dto';
+import { UserResponseDto } from '../dto/user-response.dto';
 
 @Injectable()
 export class UserService {
@@ -14,48 +15,36 @@ export class UserService {
     private readonly userRepository: UserRepository,
   ) {}
 
-  async create(dto: CreateUserDto) {
+  async create(dto: CreateUserDto): Promise<UserResponseDto> {
     const hashedPassword = await bcrypt.hash(dto.password, 10);
     const user = new User(uuidv4(), dto.email, hashedPassword, Role.User);
-    return this.userRepository.create(user);
+    const created = await this.userRepository.create(user);
+    return UserResponseDto.fromDomain(created);
   }
 
-  update(id: string, dto: UpdateUserDto) {
-    return this.userRepository.update(id, dto);
+  async update(id: string, dto: UpdateUserDto): Promise<UserResponseDto> {
+    const updated = await this.userRepository.update(id, dto);
+    return UserResponseDto.fromDomain(updated);
   }
 
-  delete(id: string) {
+  async delete(id: string): Promise<void> {
     return this.userRepository.delete(id);
   }
 
-  findById(id: string): Promise<Omit<User, 'password'> | null> {
-    return this.userRepository.findById(id).then((user) => {
-      if (!user) return null;
-      return this.filterUser(user);
-    });
+  async findById(id: string): Promise<UserResponseDto | null> {
+    const user = await this.userRepository.findById(id);
+    if (!user) return null;
+    return UserResponseDto.fromDomain(user);
   }
 
-  findByEmail(email: string): Promise<Omit<User, 'password'> | null> {
-    return this.userRepository.findByEmail(email).then((user) => {
-      if (!user) return null;
-      return this.filterUser(user);
-    });
+  async findByEmail(email: string): Promise<UserResponseDto | null> {
+    const user = await this.userRepository.findByEmail(email);
+    if (!user) return null;
+    return UserResponseDto.fromDomain(user);
   }
 
-  findAll(): Promise<Omit<User, 'password'>[]> {
-    return this.userRepository.findAll().then((users) => {
-      return users.map((user) => this.filterUser(user));
-    });
-  }
-
-  private filterUser(user: User): Omit<User, 'password'> {
-    const filteredUser = {
-      id: user.id,
-      email: user.email,
-      role: user.role,
-      profileId: user.profileId,
-      profile: user.profile,
-    };
-    return filteredUser;
+  async findAll(): Promise<UserResponseDto[]> {
+    const users = await this.userRepository.findAll();
+    return users.map((user) => UserResponseDto.fromDomain(user));
   }
 }
