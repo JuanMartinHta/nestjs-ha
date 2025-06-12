@@ -11,13 +11,13 @@ export class AuthController {
 
   @UseGuards(AuthGuard('local'))
   @Post('login')
-  login(@Request() req): { access_token: string; refresh_token: string } {
+  login(@Request() req) {
     return this.authService.login(req.user as User);
   }
 
   @UseGuards(RefreshTokenGuard)
   @Post('refresh')
-  refresh(@Request() req): { access_token: string } {
+  refresh(@Request() req) {
     const refreshToken: string = String(req.headers.authorization).replace(
       'Bearer ',
       '',

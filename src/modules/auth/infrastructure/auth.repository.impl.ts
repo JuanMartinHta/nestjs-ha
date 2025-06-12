@@ -1,83 +1,53 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 import { AuthRepository } from '../domain/auth.repository';
-import { AuthOrmEntity } from './auth.orm-entity';
-import { User } from 'src/modules/user/domain/user.entity';
-import { JwtService } from '@nestjs/jwt';
-import { AuthMapper } from './auth.mapper';
 import { AuthSession } from '../domain/auth.entity';
-import { ConfigService } from '@nestjs/config';
+import { AuthSessionDocument } from './auth.session.schema';
+import { AuthMapper } from './auth.mapper';
 
 @Injectable()
 export class AuthRepositoryImpl implements AuthRepository {
   constructor(
-    @InjectRepository(AuthOrmEntity)
-    private readonly repo: Repository<AuthOrmEntity>,
-    private readonly jwtService: JwtService,
-    private configService: ConfigService,
+    @InjectModel('AuthSession')
+    private readonly sessionModel: Model<AuthSessionDocument>,
   ) {}
 
-  login(user: User): { access_token: string; refresh_token: string } {
-    const payload = { id: user.id, email: user.email, role: user.role };
-    const access_token = this.jwtService.sign(payload, {
-      secret: this.configService.get('JWT_SECRET'),
-      expiresIn: this.configService.get('JWT_EXPIRES_IN'),
-    });
+  async login(authSession: AuthSession): Promise<AuthSession> {
+    const created = await this.sessionModel.create(
+      AuthMapper.toOrm(authSession),
+    );
 
-    const refresh_token = this.jwtService.sign(payload, {
-      secret: this.configService.get('JWT_SECRET_REFRESH'),
-      expiresIn: this.configService.get('JWT_REFRESH_EXPIRES_IN'),
-    });
-
-    return { access_token, refresh_token };
+    return AuthMapper.toDomain(created);
   }
 
-  refreshToken(token: string): { access_token: string; refresh_token: string } {
-    const tokenVerification = this.jwtService.verify<{
-      id: string;
-      email: string;
-      role: string;
-    }>(token, { secret: this.configService.get('JWT_SECRET_REFRESH') });
+  async refreshToken(authSession: AuthSession): Promise<AuthSession> {
+    const orm = AuthMapper.toOrm(authSession);
 
-    const payload = {
-      id: tokenVerification.id,
-      email: tokenVerification.email,
-      role: tokenVerification.role,
-    };
+    const updated = await this.sessionModel
+      .findOneAndUpdate(
+        { userId: authSession.id },
+        {
+          token: orm.token,
+          refreshToken: orm.refreshToken,
+          expiresIn: orm.expiresIn,
+          refreshExpiresIn: orm.refreshExpiresIn,
+        },
+        { new: true, upsert: true },
+      )
+      .exec();
 
-    const access_token = this.jwtService.sign(payload, {
-      secret: this.configService.get('JWT_SECRET'),
-      expiresIn: this.configService.get('JWT_EXPIRES_IN'),
-    });
+    if (!updated) {
+      throw new Error('Session not found or could not be updated');
+    }
 
-    const refresh_token = this.jwtService.sign(payload, {
-      secret: this.configService.get('JWT_SECRET_REFRESH'),
-      expiresIn: this.configService.get('JWT_REFRESH_EXPIRES_IN'),
-    });
-
-    return { access_token, refresh_token };
+    return AuthMapper.toDomain(updated);
   }
 
-  async create(session: AuthSession): Promise<AuthSession> {
-    const entity = this.repo.create(AuthMapper.toOrm(session));
-    const saved = await this.repo.save(entity);
-    return AuthMapper.toDomain(saved);
-  }
-
-  async delete(id: string): Promise<void> {
-    await this.repo.delete(id);
-  }
-
-  async findById(id: string): Promise<AuthSession | null> {
-    const found = await this.repo.findOneBy({ id });
-    if (!found) return null;
-    return AuthMapper.toDomain(found);
-  }
-
-  async findByToken(token: string): Promise<AuthSession | null> {
-    const found = await this.repo.findOneBy({ token });
-    if (!found) return null;
-    return AuthMapper.toDomain(found);
+  async findSessionsByUserId(userId: string): Promise<AuthSession[]> {
+    const sessions = await this.sessionModel.find({ userId }).exec();
+    return sessions.map((s) => AuthMapper.toDomain(s));
   }
 }

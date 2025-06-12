@@ -1,32 +1,36 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 import { ProfileRepository } from '../domain/profile.repository';
 import { Profile } from '../domain/profile.entity';
-import { ProfileOrmEntity } from './profile.orm-entity';
 import { ProfileMapper } from './profile.mapper';
+import { ProfileDocument } from './profile.schema';
 
 @Injectable()
 export class ProfileRepositoryImpl implements ProfileRepository {
   constructor(
-    @InjectRepository(ProfileOrmEntity)
-    private readonly repo: Repository<ProfileOrmEntity>,
+    @InjectModel('Profile')
+    private readonly profileModel: Model<ProfileDocument>,
   ) {}
 
   async create(profile: Profile): Promise<Profile> {
-    const entity = this.repo.create(ProfileMapper.toOrm(profile));
-    const saved = await this.repo.save(entity);
-    return ProfileMapper.toDomain(saved);
+    const created = await this.profileModel.create(
+      ProfileMapper.toOrm(profile),
+    );
+    return ProfileMapper.toDomain(created);
   }
 
   async update(id: string, profile: Partial<Profile>): Promise<Profile> {
-    await this.repo.update(id, profile);
-    const updated = await this.repo.findOneBy({ id });
+    const updated = await this.profileModel
+      .findByIdAndUpdate(id, ProfileMapper.toOrm(profile as Profile), {
+        new: true,
+      })
+      .exec();
     if (!updated) throw new Error('Profile not found');
     return ProfileMapper.toDomain(updated);
   }
 
   async delete(id: string): Promise<void> {
-    await this.repo.delete(id);
+    await this.profileModel.findByIdAndDelete(id).exec();
   }
 }

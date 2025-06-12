@@ -1,24 +1,26 @@
 import { AuthSession } from '../domain/auth.entity';
-import { AuthOrmEntity } from '../infrastructure/auth.orm-entity';
 
 export class AuthMapper {
-  static toDomain(entity: AuthOrmEntity): AuthSession {
+  static toDomain(sessionDoc: Record<string, any>): AuthSession {
+    const id = sessionDoc._id ? String(sessionDoc._id) : String(sessionDoc.id);
     return new AuthSession(
-      entity.id,
-      entity.userId,
-      entity.token,
-      entity.createdAt,
-      entity.expiresAt,
+      id,
+      String(sessionDoc.userId),
+      String(sessionDoc.token),
+      String(sessionDoc.refreshToken),
+      Number(sessionDoc.expiresIn || 0),
+      Number(sessionDoc.refreshExpiresIn || 0),
     );
   }
 
-  static toOrm(session: AuthSession): Partial<AuthOrmEntity> {
+  static toOrm(session: AuthSession): any {
     return {
-      id: session.id,
+      _id: session.id,
       userId: session.userId,
       token: session.token,
-      createdAt: session.createdAt,
-      expiresAt: session.expiresAt,
+      refreshToken: session.refreshToken,
+      expiresIn: session.expiresIn,
+      refreshExpiresIn: session.refreshExpiresIn,
     };
   }
 }

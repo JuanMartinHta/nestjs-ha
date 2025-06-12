@@ -1,12 +1,12 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { UserRepository } from '../domain/user.repository';
 import { User } from '../domain/user.entity';
-import { v4 as uuidv4 } from 'uuid';
 import { Role } from 'src/common/decorators/roles.decorator';
-import bcrypt from 'bcryptjs';
+import * as bcrypt from 'bcryptjs';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { UpdateUserDto } from '../dto/update-user.dto';
 import { UserResponseDto } from '../dto/user-response.dto';
+import mongoose from 'mongoose';
 
 @Injectable()
 export class UserService {
@@ -17,9 +17,14 @@ export class UserService {
 
   async create(dto: CreateUserDto): Promise<UserResponseDto> {
     const hashedPassword = await bcrypt.hash(dto.password, 10);
-    const user = new User(uuidv4(), dto.email, hashedPassword, Role.User);
-    const created = await this.userRepository.create(user);
-    return UserResponseDto.fromDomain(created);
+    const user = new User(
+      new mongoose.Types.ObjectId().toString(),
+      dto.email,
+      hashedPassword,
+      Role.User,
+    );
+    const createdUser = await this.userRepository.create(user);
+    return UserResponseDto.fromDomain(createdUser);
   }
 
   async update(id: string, dto: UpdateUserDto): Promise<UserResponseDto> {

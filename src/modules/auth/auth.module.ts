@@ -1,6 +1,4 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { AuthOrmEntity } from './infrastructure/auth.orm-entity';
 import { AuthRepositoryImpl } from './infrastructure/auth.repository.impl';
 import { AuthService } from './application/auth.service';
 import { AuthController } from './infrastructure/auth.controller';
@@ -11,10 +9,14 @@ import { LocalStrategy } from './strategies/local.strategy';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { RefreshTokenStrategy } from './strategies/refresh.strategy';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { MongooseModule } from '@nestjs/mongoose';
+import { AuthSessionSchema } from './infrastructure/auth.session.schema';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([AuthOrmEntity]),
+    MongooseModule.forFeature([
+      { name: 'AuthSession', schema: AuthSessionSchema },
+    ]),
     UserModule,
     PassportModule,
     JwtModule.registerAsync({

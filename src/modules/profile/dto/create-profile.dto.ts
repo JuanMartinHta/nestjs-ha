@@ -1,9 +1,6 @@
-import { IsNotEmpty, IsOptional } from 'class-validator';
+import { IsNotEmpty } from 'class-validator';
 
 export class CreateProfileDto {
-  @IsOptional()
-  id: string;
-
   @IsNotEmpty()
   userId: string;
 
