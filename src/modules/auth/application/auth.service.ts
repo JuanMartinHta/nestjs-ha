@@ -104,8 +104,6 @@ export class AuthService {
       Number(this.configService.get('JWT_REFRESH_EXPIRES_IN')),
     );
 
-    console.log('Auth session before saving:', authSession);
-
     const authSessionSaved =
       await this.authRepository.refreshToken(authSession);
 

@@ -1,24 +1,23 @@
 services:
-  postgres:
-    container_name: postgres_db
-    image: postgres:latest
+  mongo:
+    image: mongo:latest
+    container_name: mongo_db
     restart: always
     ports:
-      - '5432:5432'
+      - '27017:27017'
     environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: pwd
-      POSTGRES_DB: perspectiva
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
     volumes:
-      - ./data:/var/lib/postgresql/data
+      - ./data/mongo:/data/db
 
-  pgadmin:
-    image: dpage/pgadmin4
+  mongo-express:
+    image: mongo-express
     restart: always
     ports:
-      - '8080:80'
+      - 8081:8081
     environment:
-      PGADMIN_DEFAULT_EMAIL: admin@perspectiva.com
-      PGADMIN_DEFAULT_PASSWORD: admin
-    depends_on:
-      - postgres
+      ME_CONFIG_MONGODB_ADMINUSERNAME: root
+      ME_CONFIG_MONGODB_ADMINPASSWORD: example
+      ME_CONFIG_MONGODB_URL: mongodb://root:example@mongo:27017/
+      ME_CONFIG_BASICAUTH: false
